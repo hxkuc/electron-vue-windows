@@ -1,0 +1,16 @@
+{
+  "name": "electron-vue-windows",
+  "version": "1.0.9",
+  "description": "",
+  "main": "./Win.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "huang",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.4",
+    "babel-preset-stage-0": "^6.24.1"
+  }
+}
