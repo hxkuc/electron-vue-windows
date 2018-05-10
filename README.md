@@ -64,12 +64,12 @@ let data = await this.$Win.openWin({
 console.log(data) // 新窗口返回的数据 {value: 2}
 ```
 user.vue
-// 获取传入的参数
+- 获取传入的参数
 ```
 let data = this.$Win.getParameter()
 console.log(data) // {id: 1}
 ```
-// 返回数据并关闭当前窗口
+- 返回数据并关闭当前窗口
 ```
 let data = {value: 2}
 this.$Win.closeWin(data)
