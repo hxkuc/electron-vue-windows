@@ -75,4 +75,11 @@ let data = {value: 2}
 this.$Win.closeWin(data)
 ```
 
+## 注意事项
+- 因为electron-vue默认打开开发者调试工具，如果在调试工具和窗口分离的情况下隐藏窗口的调试工具会展现出来，如果想隐藏掉可以修改main/index.dev.js文件如下
+```
+// Install `electron-debug` with `devtron`
+require('electron-debug')({ showDevTools: true }) // 把true改成false即可（在页面上按f12一样可以调出开发者工具）
+```
+
 ## API介绍
