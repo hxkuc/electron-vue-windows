@@ -1,7 +1,7 @@
 
 ## 功能介绍
 
-主要针对electron-vue做的插件，必在electron-vue的基础上使用，针对electron-vue中打开新的无边框窗口缓慢、传参困难等问题做的优化，安装方式简单、使用简单
+主要针对electron-vue做的插件，必在electron-vue的基础上使用，针对electron-vue中打开新的无边框窗口缓慢、传参困难等问题做的优化，安装方式简单、使用简单, 点击[这里](https://github.com/hxkuc/electron-vue-windows-demo)可以查看简单的demo
 
 ## 安装步骤
 
