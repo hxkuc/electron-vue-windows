@@ -72,6 +72,9 @@ class Win {
      * 给新窗口绑定close和resize事件（如果页面刷新要手动解除之前的监听事件）
      */
     addEventListenerForWindow() {
+        let eventFun = (event, arg) => {
+            this.Event.emit('_windowToMsg', arg)
+        }
         let closeWinInfo = () => {
             let _windowInfo = this.WindowsBox.getWindowInfo(this.win.id)
             if (_windowInfo && _windowInfo.fromId) {
@@ -93,17 +96,21 @@ class Win {
                 if (allWindows[i].id != this.win.id && _windowList.indexOf(allWindows[i].id) < 0) appShouldQuit = false
             }
             if (appShouldQuit) remote.app.quit()
+            // 删除主进程监听
+            remote.ipcMain.removeListener('_windowToMsg', eventFun)
             this.win = null
         }
         
         window.addEventListener('beforeunload', () => {
             this.win.removeListener('close', closeWinInfo)
+            remote.ipcMain.removeListener('_windowToMsg', eventFun)
         })
         this.win.on('close', closeWinInfo)
         // 监听接收数据
-        ipcRenderer.on('_windowToMsg', (event, data) => {
+        /*ipcRenderer.on('_windowToMsg', (event, data) => {
             this.Event.emit('_windowToMsg', data)
-        })
+        })*/
+        remote.ipcMain.on('_windowToMsg', eventFun)
         ipcRenderer.on('_openWindowMsg', (event, data) => {
             this.Event.emit('_openWindowMsg' + data.fromWinId, data)
         })
@@ -113,14 +120,24 @@ class Win {
      * 接收无状态立即响应数据
      * 无name接受所有
      */
-    getMsg(fun, name) {
+    getMsg(fun, winList) {
         this.Event.on('_windowToMsg', (data) => {
-            if (name) {
-                if (data.fromWinName == name) {
-                    fun(data.data)
+            //  先判断是否有该窗口的信息
+            if (data.winList.length) {
+                let name = this.getThisWindowName()
+                // 有该窗口信息，并且接收发送窗口的数据
+                if (data.winList.indexOf(name) > -1 && (!winList || winList.indexOf(data.fromWinName) > -1)) {
+                    fun(data)
                 }
             } else {
-                fun(data.data)
+                // 判断是否接受发送窗口的信息
+                if (winList) {
+                    if (winList.indexOf(data.fromWinName) > -1) {
+                        fun(data)
+                    }
+                } else {
+                    fun(data)
+                } 
             }
         })
     }
@@ -129,7 +146,7 @@ class Win {
      * 发送无状态立即响应的数据
      * {fromWinName: '',fromWinId: '', toWinName: '', toWinId: '', data: {}}
      */
-    sendMsg(data) {   
+    /*sendMsg(data) {   
         if (!data.toWinId && !data.toWinName) {
             return false
         }
@@ -151,8 +168,27 @@ class Win {
             data.fromWinId = this.win.id
         }
         remote.BrowserWindow.fromId(data.toWinId).webContents.send('_windowToMsg', data)
-    }
+    }*/
 
+    /*
+     * 发送无状态立即响应的数据
+     * {fromWinName: '',fromWinId: '', toWinName: '', toWinId: '', data: {}}
+     */
+    sendMsg(data, winList) {   
+        let _data = {
+            data: data,
+            winList: winList ? winList : []
+        }
+        let _windowInfo = this.WindowsBox.getWindowInfo(this.win.id)
+        if (_windowInfo) {
+            _data.fromWinName = _windowInfo.name
+            _data.fromWinId = _windowInfo.id
+        } else {
+            _data.fromWinName = this.win.id
+            _data.fromWinId = this.win.id
+        }
+        ipcRenderer.send('_windowToMsg', _data)
+    }
 
     /*
      * 判断是否在数组中存在
@@ -171,6 +207,13 @@ class Win {
             if (ishave) key = index
         })
         return key
+    }
+
+    /*
+     * 获取窗口的名字
+     */
+    getThisWindowName () {
+        return this.WindowsBox.getWindowInfo(this.win.id).name
     }
 }
 
