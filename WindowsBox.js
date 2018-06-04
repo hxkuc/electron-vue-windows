@@ -176,6 +176,14 @@ class WindowsBox {
         // 重置窗口大小
         freeWindow.setSize(option.width, option.height)
         freeWindow.center()
+        // 检查窗口是否允许最大化最小化（maximizable，minimizable）
+        if (false === option.minimizable) {
+            freeWindow.setMinimizable(false)
+        }
+        if (false === option.maximizable) {
+            freeWindow.setMaximizable(false)
+        }
+        
         this.setUseWindow(freeWindowInfo)
         this.checkFreeWindow()
         // 发送监听事件页面内跳转（放在设置和检查窗口后面防止多进程重复问题）

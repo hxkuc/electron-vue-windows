@@ -14,9 +14,9 @@ class Win {
     /*
      * 通用弹窗函数
      */
-    openWin(option) {
+    openWin(option, isWin) {
+        let win = isWin ? option : this.WindowsBox.getFreeWindow(option)
         option.fromWinId = this.win.id
-        let win = this.WindowsBox.getFreeWindow(option)
         win.show()
         // 防止对象被销毁
         let winId = win.id
@@ -38,6 +38,13 @@ class Win {
             this.WindowsBox.setWindowInfo(_windowInfo, this.win.id)
         }
         this.win.close()
+    }
+
+    /*
+     * 创建新的窗口并返回窗口对象（不显示用于绑定事件）
+     */
+    createWin (option) {
+        return this.WindowsBox.getFreeWindow(option)
     }
 
     /*
