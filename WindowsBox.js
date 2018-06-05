@@ -183,6 +183,13 @@ class WindowsBox {
         if (false === option.maximizable) {
             freeWindow.setMaximizable(false)
         }
+        if (false === option.resizable) {
+            freeWindow.setResizable(false)
+        }
+        // 重置当前位置
+        if (option.x && option.y) {
+            freeWindow.setPosition(option.x, option.y)
+        }
         
         this.setUseWindow(freeWindowInfo)
         this.checkFreeWindow()
