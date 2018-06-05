@@ -190,6 +190,14 @@ class WindowsBox {
         if (option.x && option.y) {
             freeWindow.setPosition(option.x, option.y)
         }
+        // 是否置顶窗口
+        if (option.alwaysOnTop) {
+            freeWindow.setAlwaysOnTop(true)
+        }
+        // 是否在任务栏中显示
+        if (option.skipTaskbar) {
+            freeWindow.setSkipTaskbar(true)
+        }
         
         this.setUseWindow(freeWindowInfo)
         this.checkFreeWindow()
