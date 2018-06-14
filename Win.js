@@ -32,12 +32,29 @@ class Win {
      * 关闭弹窗并且发送数据
      */
     closeWin(data) {
-        if (data) {
-            let _windowInfo = this.WindowsBox.getWindowInfo(this.win.id)
-            _windowInfo.backMsg = data
-            this.WindowsBox.setWindowInfo(_windowInfo, this.win.id)
+        // 判断是否是复用窗口
+        let _windowInfo = this.WindowsBox.getWindowInfo(this.win.id)
+        if (_windowInfo.reuse) {
+            // 复用窗口隐藏hide
+            remote.BrowserWindow.fromId(_windowInfo.fromId).webContents.send('_openWindowMsg', data)
+            this.win.hide()  
+        } else {
+            if (data) {
+                _windowInfo.backMsg = data
+                this.WindowsBox.setWindowInfo(_windowInfo, this.win.id)
+            }
+            this.win.close()
         }
-        this.win.close()
+    }
+
+    /*
+     * 复用窗口的关闭
+     */
+    exitWin (data) {
+        let _windowInfo = this.WindowsBox.getWindowInfo(this.win.id)
+        _windowInfo.reuse = false
+        this.WindowsBox.setWindowInfo(_windowInfo, this.win.id)
+        this.closeWin(data)
     }
 
     /*

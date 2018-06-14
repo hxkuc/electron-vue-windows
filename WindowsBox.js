@@ -58,7 +58,8 @@ class WindowsBox {
             router: this.freePage.router,
             sendMsg: {},
             backMsg: {},
-            fromId: ''
+            fromId: '',
+            reuse: false
         })
         let winId = win.id
 
@@ -173,6 +174,7 @@ class WindowsBox {
         freeWindowInfo.isUse = true
         freeWindowInfo.name = option.name
         freeWindowInfo.fromId = option.fromWinId
+        freeWindowInfo.reuse = option.reuse || false
         // 重置窗口大小
         freeWindow.setSize(option.width, option.height)
         freeWindow.center()
