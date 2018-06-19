@@ -177,7 +177,7 @@ class WindowsBox {
         freeWindowInfo.fromId = option.fromWinId
         freeWindowInfo.reuse = option.reuse || false
         // 重置窗口大小
-        freeWindow.setSize(option.width, option.height)
+        freeWindow.setSize(option.width || 800, option.height || 600)
         freeWindow.center()
         // 检查窗口是否允许最大化最小化（maximizable，minimizable）
         if (false === option.minimizable) {
