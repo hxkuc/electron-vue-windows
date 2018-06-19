@@ -15,8 +15,7 @@ class Win {
      * 通用弹窗函数
      */
     openWin(option, isWin) {
-        let win = isWin ? option : this.WindowsBox.getFreeWindow(option)
-        option.fromWinId = this.win.id
+        let win = isWin ? option : this.createWin(option)
         win.show()
         // 防止对象被销毁
         let winId = win.id
@@ -34,15 +33,25 @@ class Win {
     closeWin(data) {
         // 判断是否是复用窗口
         let _windowInfo = this.WindowsBox.getWindowInfo(this.win.id)
+        _windowInfo.isUse = false
+        if (data) {
+          _windowInfo.backMsg = data  
+        }
+        this.WindowsBox.setWindowInfo(_windowInfo, this.win.id)
         if (_windowInfo.reuse) {
             // 复用窗口隐藏hide
-            remote.BrowserWindow.fromId(_windowInfo.fromId).webContents.send('_openWindowMsg', data)
+            if (_windowInfo.fromId) {
+                // 先发送数据
+                let sendData = {
+                    toWinId: _windowInfo.fromId,
+                    fromWinName: _windowInfo.name,
+                    fromWinId: _windowInfo.id,
+                    data: data
+                }
+                remote.BrowserWindow.fromId(_windowInfo.fromId).webContents.send('_openWindowMsg', sendData)
+            }
             this.win.hide()  
         } else {
-            if (data) {
-                _windowInfo.backMsg = data
-                this.WindowsBox.setWindowInfo(_windowInfo, this.win.id)
-            }
             this.win.close()
         }
     }
@@ -61,6 +70,11 @@ class Win {
      * 创建新的窗口并返回窗口对象（不显示用于绑定事件）
      */
     createWin (option) {
+        option.fromWinId = this.win.id
+        // 如果复用窗口必须有name参数
+        if (option.reuse && !option.name) {
+            throw new Error('复用窗口必须定义窗口name')
+        }
         return this.WindowsBox.getFreeWindow(option)
     }
 
@@ -116,8 +130,11 @@ class Win {
             let allWindows = remote.BrowserWindow.getAllWindows()
             let _windowList = this.WindowsBox.getWindowList().map(row => row.id)
             let appShouldQuit = true
+            // all是所有的窗口，list是储存的窗口
+            // 什么情况下应该关闭应用--all中只剩空窗和当前窗口才关闭
             for (var i = allWindows.length - 1; i >= 0; i--) {
-                if (allWindows[i].id != this.win.id && _windowList.indexOf(allWindows[i].id) < 0) appShouldQuit = false
+                let key = _windowList.indexOf(allWindows[i].id)
+                if (allWindows[i].id != this.win.id && (key < 0 || (key > -1 && this.WindowsBox.getWindowInfo(_windowList[key]).isUse))) appShouldQuit = false
             }
             if (appShouldQuit) remote.app.quit()
             // 删除主进程监听

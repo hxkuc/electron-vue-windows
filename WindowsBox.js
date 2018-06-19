@@ -72,7 +72,8 @@ class WindowsBox {
                 let _windowList = this._windowList.map(row => row.id)
                 let appShouldQuit = true
                 for (var i = allWindows.length - 1; i >= 0; i--) {
-                    if (_windowList.indexOf(allWindows[i].id) < 0) appShouldQuit = false
+                    let key = _windowList.indexOf(allWindows[i].id)
+                    if (allWindows[i].id != winId && (key < 0 || (key > -1 && this.getWindowInfo(_windowList[key]).isUse))) appShouldQuit = false
                 }
                 if (appShouldQuit) app.quit()
                 win = null
@@ -227,7 +228,8 @@ class WindowsBox {
      * 取出一个空白窗口并且返回（仅仅取出对象）
      */
     _getFreeWindow() {
-        let winInfo = this._windowList.find(row => row.isUse === false)
+        // 没有使用的窗口并且不是复用的窗口
+        let winInfo = this._windowList.find(row => row.isUse === false && !row.reuse)
         if (!winInfo) {
         	let win = this.creatFreeWindow()
         	return this._windowList.find(row => row.id === win.id)
