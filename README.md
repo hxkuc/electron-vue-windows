@@ -49,7 +49,7 @@ export default new Router({
 index.vue
 ```
 let data = await this.$Win.openWin({
-	width: 700, // 窗口宽
+  width: 700, // 窗口宽
   height: 600, // 窗口高
   router: '/user', // 路由
   data: {id: 1}, // 传送数据 
