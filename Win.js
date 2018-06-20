@@ -1,7 +1,5 @@
-const path = require('path')
-const winPath = path.join(__dirname, 'WindowsBox.js')
-const WindowsBox = require('electron').remote.require(winPath)
 const { remote, ipcRenderer } = require('electron')
+const WindowsBox = remote.require('electron-windows-box')
 const events = require('events')
 
 class Win {
