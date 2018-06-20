@@ -24,13 +24,7 @@ Vue.prototype.$Win = Win
 <script>
 export default {
   name: 'backGround',
-  data () {
-    return {
-    }
-  },
-  methods: {
-  },
-  mounted: function () {
+  beforeCreate: function () {
     this.$Win.changePath(this)
   }
 }
@@ -56,10 +50,10 @@ index.vue
 ```
 let data = await this.$Win.openWin({
 	width: 700, // 窗口宽
-    height: 600, // 窗口高
-    router: '/user', // 路由
-    data: {id: 1}, // 传送数据 
-    name: 'user' // 窗口名称
+  height: 600, // 窗口高
+  router: '/user', // 路由
+  data: {id: 1}, // 传送数据 
+  name: 'user' // 窗口名称
 })
 console.log(data) // 新窗口返回的数据 {value: 2}
 ```
