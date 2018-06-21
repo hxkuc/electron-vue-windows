@@ -73,7 +73,8 @@ class Win {
         if (option.reuse && !option.name) {
             throw new Error('复用窗口必须定义窗口name')
         }
-        return this.WindowsBox.getFreeWindow(option)
+        // 暂时只能允许传递字符串
+        return this.WindowsBox.getFreeWindow(JSON.stringify(option))
     }
 
     /*
