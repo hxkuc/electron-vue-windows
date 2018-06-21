@@ -1,0 +1,1 @@
+module.exports = process.type === 'browser' ? require('./WindowsBox.js') : require('./Win.js')
