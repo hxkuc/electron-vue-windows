@@ -167,17 +167,14 @@ class WindowsBox {
       freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
       option.name = freeWindowInfo.id
     }
-
-    // 更新参数
-    freeWindowInfo.router = option.router
-    freeWindowInfo.sendMsg = option.data || {}
-    freeWindowInfo.isUse = true
-    freeWindowInfo.name = option.name
-    freeWindowInfo.fromId = option.fromWinId
-    freeWindowInfo.reuse = option.reuse || false
+    // 先重置窗口状态（electron窗口最小化的时候不会触发实例方法）
+    if (freeWindow.isMinimized()) {
+        freeWindow.hide()
+        freeWindow.restore()
+    }
+    
     // 重置窗口大小
     freeWindow.setSize(option.width || 800, option.height || 600)
-    freeWindow.center()
     // 检查窗口是否允许最大化最小化（maximizable，minimizable）
     if (false === option.minimizable) {
       freeWindow.setMinimizable(false)
@@ -191,6 +188,10 @@ class WindowsBox {
     // 重置当前位置
     if (option.x && option.y) {
       freeWindow.setPosition(option.x, option.y)
+    } else {
+      if (!freeWindowInfo.isUse) {
+        freeWindow.center()
+      }
     }
     // 是否置顶窗口
     if (option.alwaysOnTop) {
@@ -200,6 +201,14 @@ class WindowsBox {
     if (option.skipTaskbar) {
       freeWindow.setSkipTaskbar(true)
     }
+
+    // 更新参数
+    freeWindowInfo.router = option.router
+    freeWindowInfo.sendMsg = option.data || {}
+    freeWindowInfo.isUse = true
+    freeWindowInfo.name = option.name
+    freeWindowInfo.fromId = option.fromWinId
+    freeWindowInfo.reuse = option.reuse || false
 
     this.setUseWindow(freeWindowInfo)
     this.checkFreeWindow()
