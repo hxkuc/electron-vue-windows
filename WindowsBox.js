@@ -168,7 +168,7 @@ class WindowsBox {
       option.name = freeWindowInfo.id
     }
     // 先重置窗口状态（electron窗口最小化的时候不会触发实例方法）
-    if (freeWindow.isMinimized()) {
+    if (freeWindowInfo.isUse) {
         freeWindow.hide()
         freeWindow.restore()
     }
