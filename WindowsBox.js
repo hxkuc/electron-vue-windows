@@ -167,6 +167,23 @@ class WindowsBox {
       freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
       option.name = freeWindowInfo.id
     }
+    // 发送监听事件页面内跳转（放在设置和检查窗口后面防止多进程重复问题）
+    // 背景窗口还没初始化完成会导致信息无法被获取
+    // 解决方案是判断窗口是否加载完成如果加载完成直接发送，如果未完成等待完成再发送
+    if (freeWindow.webContents.isLoading()) {
+      freeWindow.webContents.once('did-finish-load', function () {
+        freeWindow.webContents.send('_changeModelPath', {
+          router: option.router,
+          windowInfo: freeWindowInfo
+        })
+      })
+    } else {
+      freeWindow.webContents.send('_changeModelPath', {
+        router: option.router,
+        windowInfo: freeWindowInfo
+      })
+    }
+    
     // 先重置窗口状态（electron窗口最小化的时候不会触发实例方法）
     if (freeWindowInfo.isUse) {
         freeWindow.hide()
@@ -212,22 +229,6 @@ class WindowsBox {
 
     this.setUseWindow(freeWindowInfo)
     this.checkFreeWindow()
-    // 发送监听事件页面内跳转（放在设置和检查窗口后面防止多进程重复问题）
-    // 背景窗口还没初始化完成会导致信息无法被获取
-    // 解决方案是判断窗口是否加载完成如果加载完成直接发送，如果未完成等待完成再发送
-    if (freeWindow.webContents.isLoading()) {
-      freeWindow.webContents.once('did-finish-load', function () {
-        freeWindow.webContents.send('_changeModelPath', {
-          router: option.router,
-          windowInfo: freeWindowInfo
-        })
-      })
-    } else {
-      freeWindow.webContents.send('_changeModelPath', {
-        router: option.router,
-        windowInfo: freeWindowInfo
-      })
-    }
     return freeWindow
   }
 
