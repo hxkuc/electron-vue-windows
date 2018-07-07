@@ -31,24 +31,29 @@ class Win {
   closeWin (data) {
     // 判断是否是复用窗口
     let _windowInfo = this.WindowsBox.getWindowInfo(this.win.id)
-    _windowInfo.isUse = false
-    if (data) {
-      _windowInfo.backMsg = data
-    }
-    this.WindowsBox.setWindowInfo(_windowInfo, this.win.id)
-    if (_windowInfo.reuse) {
-      // 复用窗口隐藏hide
-      if (_windowInfo.fromId) {
-        // 先发送数据
-        let sendData = {
-          toWinId: _windowInfo.fromId,
-          fromWinName: _windowInfo.name,
-          fromWinId: _windowInfo.id,
-          data: data
-        }
-        remote.BrowserWindow.fromId(_windowInfo.fromId).webContents.send('_openWindowMsg', sendData)
+    // 没有调用默认关闭
+    if (_windowInfo) {
+      _windowInfo.isUse = false
+      if (data) {
+        _windowInfo.backMsg = data
       }
-      this.win.hide()
+      this.WindowsBox.setWindowInfo(_windowInfo, this.win.id)
+      if (_windowInfo.reuse) {
+        // 复用窗口隐藏hide
+        if (_windowInfo.fromId) {
+          // 先发送数据
+          let sendData = {
+            toWinId: _windowInfo.fromId,
+            fromWinName: _windowInfo.name,
+            fromWinId: _windowInfo.id,
+            data: data
+          }
+          remote.BrowserWindow.fromId(_windowInfo.fromId).webContents.send('_openWindowMsg', sendData)
+        }
+        this.win.hide()
+      } else {
+        this.win.close()
+      }
     } else {
       this.win.close()
     }
