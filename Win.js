@@ -1,12 +1,45 @@
 const { remote, ipcRenderer } = require('electron')
 const WindowsBox = remote.require('electron-vue-windows')
 const events = require('events')
+const TWEEN = require('@tweenjs/tween.js')
 
 class Win {
   constructor () {
     this.win = remote.getCurrentWindow()
     this.WindowsBox = null
     this.Event = new events.EventEmitter()
+  }
+
+  /*
+   * 动画
+   */
+  move (data) {
+    let animateId
+    function animate (time) {
+      console.log(this)
+      animateId = requestAnimationFrame(animate)
+      TWEEN.update(time)
+    }
+
+    let fromPos = this.win.getPosition()
+
+    TWEEN.removeAll()
+    let win = this.win
+    let tween = new TWEEN.Tween({
+      x: fromPos[0],
+      y: fromPos[1],
+      z: 0.5
+    })
+      .to({x: data.toConfig.x, y: data.toConfig.y, z: 1}, data.toConfig.time)
+      .onUpdate(function (a) {
+        win.setPosition(parseInt(a.x), parseInt(a.y))
+        win.setOpacity(a.z)
+      }).onComplete(function () {
+        cancelAnimationFrame(animateId)
+      }).start()
+    let graphs = data.toConfig.graphs.split('.')
+    tween.easing(TWEEN.Easing[graphs[0]][graphs[1]])
+    animate()
   }
 
   /*
@@ -28,16 +61,17 @@ class Win {
   /*
    * 关闭弹窗并且发送数据
    */
-  closeWin (data) {
+  closeWin (data, win) {
     // 判断是否是复用窗口
-    let _windowInfo = this.WindowsBox.getWindowInfo(this.win.id)
+    win = win || this.win
+    let _windowInfo = this.WindowsBox.getWindowInfo(win.id)
     // 没有调用默认关闭
     if (_windowInfo) {
       _windowInfo.isUse = false
       if (data) {
         _windowInfo.backMsg = data
       }
-      this.WindowsBox.setWindowInfo(_windowInfo, this.win.id)
+      this.WindowsBox.setWindowInfo(_windowInfo, win.id)
       if (_windowInfo.reuse) {
         // 复用窗口隐藏hide
         if (_windowInfo.fromId) {
@@ -50,34 +84,39 @@ class Win {
           }
           remote.BrowserWindow.fromId(_windowInfo.fromId).webContents.send('_openWindowMsg', sendData)
         }
-        this.win.hide()
+        win.hide()
       } else {
-        this.win.close()
+        win.close()
       }
     } else {
-      this.win.close()
+      win.close()
     }
   }
 
   /*
    * 复用窗口的关闭
    */
-  exitWin (data) {
-    let _windowInfo = this.WindowsBox.getWindowInfo(this.win.id)
+  exitWin (data, win) {
+    win = win || this.win
+    let _windowInfo = this.WindowsBox.getWindowInfo(win.id)
     _windowInfo.reuse = false
-    this.WindowsBox.setWindowInfo(_windowInfo, this.win.id)
-    this.closeWin(data)
+    this.WindowsBox.setWindowInfo(_windowInfo, win.id)
+    this.closeWin(data, win)
   }
 
   /*
    * 创建新的窗口并返回窗口对象（不显示用于绑定事件）
    */
   createWin (option) {
-    option.fromWinId = this.win.id
+    if (!option.windowConfig) {
+      option.windowConfig = {}
+    }
+    option.windowConfig.fromWinId = this.win.id
     // 如果复用窗口必须有name参数
-    if (option.reuse && !option.name) {
+    if (option.windowConfig.reuse && !option.windowConfig.name) {
       throw new Error('复用窗口必须定义窗口name')
     }
+    console.log(option)
     // 暂时只能允许传递字符串
     return this.WindowsBox.getFreeWindow(JSON.stringify(option))
   }
@@ -94,7 +133,7 @@ class Win {
    */
   changePath (vm) {
     ipcRenderer.on('_changeModelPath', (event, arg) => {
-      vm.$router.push({ path: arg.router })
+      vm.$router.push({ path: arg })
     })
   }
 
@@ -160,6 +199,11 @@ class Win {
     ipcRenderer.on('_openWindowMsg', (event, data) => {
       this.Event.emit('_openWindowMsg' + data.fromWinId, data)
     })
+    ipcRenderer.on('_moveing', (event, data) => {
+      console.log(data)
+      console.log(123)
+      this.move(data)
+    })
   }
 
   /*
@@ -187,36 +231,6 @@ class Win {
       }
     })
   }
-
-  /*
-   * 发送无状态立即响应的数据
-   * {fromWinName: '',fromWinId: '', toWinName: '', toWinId: '', data: {}}
-   */
-  /*
-  sendMsg(data) {
-      if (!data.toWinId && !data.toWinName) {
-          return false
-      }
-      if (!data.toWinId) {
-          let _windowList = this.WindowsBox.getWindowList()
-          let key = this.inArray({name: data.toWinName}, _windowList)
-          if (key > -1) {
-              data.toWinId = _windowList[key].id
-          } else {
-              console.log('无此窗口...') // 暂时先这么着
-          }
-      }
-      let _windowInfo = this.WindowsBox.getWindowInfo(this.win.id)
-      if (_windowInfo) {
-          data.fromWinName = _windowInfo.name
-          data.fromWinId = _windowInfo.id
-      } else {
-          data.fromWinName = this.win.id
-          data.fromWinId = this.win.id
-      }
-      remote.BrowserWindow.fromId(data.toWinId).webContents.send('_windowToMsg', data)
-  }
-  */
 
   /*
    * 发送无状态立即响应的数据

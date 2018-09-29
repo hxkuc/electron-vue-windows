@@ -5,6 +5,7 @@
  */
 const { app, BrowserWindow, webContents } = require('electron')
 const path = require('path')
+const electronVibrancy = require('electron-vibrancy')
 
 /*
  * 简单说一下这个窗口的实现思路
@@ -149,10 +150,10 @@ class WindowsBox {
     // 判断参数是否有name和refresh属性（如果有name属性查找该name窗口是否存在，存在显示不存在新建）
     option = option ? JSON.parse(option) : {}
     let freeWindow, freeWindowInfo
-    if (option.name) {
-      let winInfo = this._windowList.find(row => row.name === option.name)
+    if (option.windowConfig.name) {
+      let winInfo = this._windowList.find(row => row.name === option.windowConfig.name)
       if (winInfo) {
-        if (!option.reload) {
+        if (!option.windowConfig.reload) {
           return BrowserWindow.fromId(winInfo.id)
         } else {
           freeWindow = BrowserWindow.fromId(winInfo.id)
@@ -165,71 +166,203 @@ class WindowsBox {
     } else {
       freeWindowInfo = this._getFreeWindow()
       freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
-      option.name = freeWindowInfo.id
+      // option.windowConfig.name = freeWindowInfo.id
     }
-    // 发送监听事件页面内跳转（放在设置和检查窗口后面防止多进程重复问题）
-    // 背景窗口还没初始化完成会导致信息无法被获取
-    // 解决方案是判断窗口是否加载完成如果加载完成直接发送，如果未完成等待完成再发送
-    if (freeWindow.webContents.isLoading()) {
-      freeWindow.webContents.once('did-finish-load', function () {
-        freeWindow.webContents.send('_changeModelPath', {
-          router: option.router,
-          windowInfo: freeWindowInfo
-        })
-      })
-    } else {
-      freeWindow.webContents.send('_changeModelPath', {
-        router: option.router,
-        windowInfo: freeWindowInfo
-      })
-    }
-    
-    // 先重置窗口状态（electron窗口最小化的时候不会触发实例方法）
-    if (freeWindowInfo.isUse) {
-        freeWindow.hide()
-        freeWindow.restore()
-    }
-    
-    // 重置窗口大小
-    freeWindow.setSize(option.width || 800, option.height || 600)
-    // 检查窗口是否允许最大化最小化（maximizable，minimizable）
-    if (false === option.minimizable) {
-      freeWindow.setMinimizable(false)
-    }
-    if (false === option.maximizable) {
-      freeWindow.setMaximizable(false)
-    }
-    if (false === option.resizable) {
-      freeWindow.setResizable(false)
-    }
-    // 重置当前位置
-    if (option.x && option.y) {
-      freeWindow.setPosition(option.x, option.y)
-    } else {
-      if (!freeWindowInfo.isUse) {
-        freeWindow.center()
+    console.log(option)
+    if (option.windowConfig.name) {
+      if (freeWindowInfo.reuse) {
+        if (freeWindowInfo.isUse) {
+          // 无动画直接显示
+          // 先发送路由跳转
+          this.windowRouterChange(freeWindow, option.windowConfig.router)
+        } else {
+          // 有动画
+          this.windowRouterChange(freeWindow, option.windowConfig.router)
+          // 生成动画前和动画后状态
+          let baseConfig = this.getBaseConfig(option)
+          this.setWindowConfig(baseConfig, freeWindow)
+          // 如果有动画生成动画后状态
+          if (option.windowConfig.animation || option.windowConfig.customAnimation) {
+            let toConfig = this.getToConfig(option)
+            this.animation(freeWindow, toConfig)
+          }
+        }
+      } else {
+        console.log(freeWindowInfo)
+        if (freeWindowInfo.isUse) {
+          if (option.windowConfig.reload) {
+            // 刷新页面无动画
+            this.windowRouterChange(freeWindow, option.windowConfig.router)
+          }
+        } else {
+          this.windowRouterChange(freeWindow, option.windowConfig.router)
+          let baseConfig = this.getBaseConfig(option)
+          console.log(baseConfig)
+          this.setWindowConfig(baseConfig, freeWindow)
+          // 如果有动画生成动画后状态
+          if (option.windowConfig.animation || option.windowConfig.customAnimation) {
+            let toConfig = this.getToConfig(option)
+            this.animation(freeWindow, toConfig)
+          }
+        }
       }
-    }
-    // 是否置顶窗口
-    if (option.alwaysOnTop) {
-      freeWindow.setAlwaysOnTop(true)
-    }
-    // 是否在任务栏中显示
-    if (option.skipTaskbar) {
-      freeWindow.setSkipTaskbar(true)
+    } else {
+      // 有动画
+      this.windowRouterChange(freeWindow, option.windowConfig.router)
+      let baseConfig = this.getBaseConfig(option)
+      this.setWindowConfig(baseConfig, freeWindow)
+      // 如果有动画生成动画后状态
+      if (option.windowConfig.animation || option.windowConfig.customAnimation) {
+        let toConfig = this.getToConfig(option)
+        this.animation(freeWindow, toConfig)
+      }
     }
 
     // 更新参数
-    freeWindowInfo.router = option.router
-    freeWindowInfo.sendMsg = option.data || {}
+    freeWindowInfo.router = option.windowConfig.router
+    freeWindowInfo.sendMsg = option.windowConfig.data || {}
     freeWindowInfo.isUse = true
-    freeWindowInfo.name = option.name
-    freeWindowInfo.fromId = option.fromWinId
-    freeWindowInfo.reuse = option.reuse || false
+    freeWindowInfo.name = option.windowConfig.name
+    freeWindowInfo.fromId = option.windowConfig.fromWinId
+    freeWindowInfo.reuse = option.windowConfig.reuse || false
 
     this.setUseWindow(freeWindowInfo)
     this.checkFreeWindow()
     return freeWindow
+  }
+
+  /*
+   * @desc 获取基础配置
+   * {vibrancy, width, height, minimizable, maximizable, resizable, x, y, center, alwaysOnTop, skipTaskbar}
+   */
+  getBaseConfig (option) {
+    let config = {}
+    // 判断配置中是否有动画
+    let noAnimation = !option.windowConfig.animation && !option.windowConfig.customAnimation
+    console.log(noAnimation)
+    if (noAnimation) {
+      if (option.x && option.y) {
+        config.x = option.x || ''
+        config.y = option.y || ''
+      } else {
+        config.center = true
+      }
+    } else {
+      if (option.windowConfig.animation) {
+        switch (option.windowConfig.animation) {
+          case 'fromRight':
+            config.x = option.x + option.width || 800
+            config.y = option.y
+            break
+          case 'fromLeft':
+            config.x = option.x - option.width || 800
+            config.y = option.y
+            break
+          case 'fromTop':
+            config.x = option.x
+            config.y = option.y - option.height || 800
+            break
+          case 'fromBottom':
+            config.x = option.x
+            config.y = option.y + option.height || 800
+            break
+        }
+      }
+      if (option.windowConfig.customAnimation && option.windowConfig.customAnimation.fromPosition) {
+        config.x = option.windowConfig.customAnimation.fromPosition.x
+        config.y = option.windowConfig.customAnimation.fromPosition.y
+      }
+    }
+    config.vibrancy = option.windowConfig.vibrancy !== false
+    config.width = option.width || 800
+    config.height = option.height || 600
+    config.minimizable = option.minimizable || false
+    config.maximizable = option.maximizable || false
+    config.resizable = option.resizable || false
+    config.alwaysOnTop = option.alwaysOnTop || false
+    config.skipTaskbar = option.skipTaskbar || false
+    return config
+  }
+
+  /*
+   * @desc 获取结束动画配置
+   *
+   */
+  getToConfig (option) {
+    console.log(option)
+    let config = {}
+    config.x = option.x
+    config.y = option.y
+    config.time = (option.windowConfig.customAnimation && option.windowConfig.customAnimation.time) || 1000
+    config.graphs = (option.windowConfig.customAnimation && option.windowConfig.customAnimation.graphs) || 'Exponential.Out'
+    console.log(config)
+    return config
+  }
+
+  /*
+   * @desc 新窗口路由跳转
+   */
+  windowRouterChange (win, router) {
+    if (win.webContents.isLoading()) {
+      win.webContents.once('did-finish-load', function () {
+        win.webContents.send('_changeModelPath', router)
+      })
+    } else {
+      win.webContents.send('_changeModelPath', router)
+    }
+  }
+
+  /*
+   * @desc 跳转动画
+   */
+  animation (win, toConfig, fromConfig) {
+    win.webContents.send('_moveing', {
+      fromConfig: fromConfig,
+      toConfig: toConfig
+    })
+  }
+
+  /*
+   * @desc 重新设置窗口的基础属性
+   * 目前需要手动调整的后期根据需求加入
+   * @param {object} config:{vibrancy, width, height, minimizable, maximizable, resizable, x, y, center, alwaysOnTop, skipTaskbar}
+   */
+  setWindowConfig (config, freeWindow) {
+    // 是否开启背景模糊
+    if (config.vibrancy !== false) {
+      freeWindow.on('resize', () => {
+        electronVibrancy.SetVibrancy(freeWindow, 0)
+      })
+    }
+    // 重置窗口大小
+    freeWindow.setSize(config.width || 800, config.height || 600)
+    // 检查窗口是否允许最大化最小化（maximizable，minimizable）
+    if (config.minimizable === false) {
+      freeWindow.setMinimizable(false)
+    }
+    if (config.maximizable === false) {
+      freeWindow.setMaximizable(false)
+    }
+    if (config.resizable === false) {
+      freeWindow.setResizable(false)
+    }
+    // 重置当前位置
+    if (config.x && config.y) {
+      freeWindow.setPosition(config.x, config.y)
+    }
+
+    if (config.center) {
+      freeWindow.center()
+    }
+
+    // 是否置顶窗口
+    if (config.alwaysOnTop) {
+      freeWindow.setAlwaysOnTop(true)
+    }
+    // 是否在任务栏中显示
+    if (config.skipTaskbar) {
+      freeWindow.setSkipTaskbar(true)
+    }
   }
 
   /*
