@@ -151,6 +151,70 @@ class WindowsBox {
     option = option ? JSON.parse(option) : {}
     let freeWindow, freeWindowInfo
     if (option.windowConfig.name) {
+      // 查询是否有该name窗口存在
+      let winInfo = this._windowList.find(row => row.name === option.windowConfig.name)
+      if (winInfo) {
+        freeWindow = BrowserWindow.fromId(winInfo.id)
+        freeWindowInfo = winInfo
+        if (freeWindowInfo.reuse) {
+          if (freeWindowInfo.isUse) {
+            if (option.windowConfig.reload) {
+              this.windowRouterChange(freeWindow, option.windowConfig.router)
+              this.refreshFreeWindowInfo(freeWindowInfo, option)
+            }
+          } else {
+            // 路由跳转
+            this.windowRouterChange(freeWindow, option.windowConfig.router)
+            // 窗口基础状态
+            this.setWindowConfig(this.getBaseConfig(option), freeWindow)
+            // 如果有动画生成动画后状态
+            if (option.windowConfig.animation || option.windowConfig.customAnimation) {
+              this.animation(freeWindow, this.getToConfig(option))
+            }
+            // 更新队列
+            this.refreshFreeWindowInfo(freeWindowInfo, option)
+          }
+        } else {
+          if (option.windowConfig.reload) {
+            this.windowRouterChange(freeWindow, option.windowConfig.router)
+            this.refreshFreeWindowInfo(freeWindowInfo, option)
+          }
+        }
+      } else {
+        freeWindowInfo = this._getFreeWindow()
+        freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
+        // 路由跳转
+        this.windowRouterChange(freeWindow, option.windowConfig.router)
+        // 窗口基础状态
+        this.setWindowConfig(this.getBaseConfig(option), freeWindow)
+        // 如果有动画生成动画后状态
+        if (option.windowConfig.animation || option.windowConfig.customAnimation) {
+          this.animation(freeWindow, this.getToConfig(option))
+        }
+        // 更新队列
+        this.refreshFreeWindowInfo(freeWindowInfo, option)
+        this.checkFreeWindow()
+      }
+    } else {
+      // 拉出窗口
+      freeWindowInfo = this._getFreeWindow()
+      freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
+      // 路由跳转
+      this.windowRouterChange(freeWindow, option.windowConfig.router)
+      // 窗口基础状态
+      this.setWindowConfig(this.getBaseConfig(option), freeWindow)
+      // 如果有动画生成动画后状态
+      if (option.windowConfig.animation || option.windowConfig.customAnimation) {
+        this.animation(freeWindow, this.getToConfig(option))
+      }
+      // 更新队列
+      this.refreshFreeWindowInfo(freeWindowInfo, option)
+      this.checkFreeWindow()
+    }
+    return freeWindow
+
+    /* let freeWindow, freeWindowInfo
+    if (option.windowConfig.name) {
       let winInfo = this._windowList.find(row => row.name === option.windowConfig.name)
       if (winInfo) {
         if (!option.windowConfig.reload) {
@@ -219,16 +283,23 @@ class WindowsBox {
     }
 
     // 更新参数
+
+    this.checkFreeWindow()
+    return freeWindow
+    */
+  }
+
+  /*
+   * @desc 更新队列
+   */
+  refreshFreeWindowInfo (freeWindowInfo, option) {
     freeWindowInfo.router = option.windowConfig.router
     freeWindowInfo.sendMsg = option.windowConfig.data || {}
     freeWindowInfo.isUse = true
     freeWindowInfo.name = option.windowConfig.name
     freeWindowInfo.fromId = option.windowConfig.fromWinId
     freeWindowInfo.reuse = option.windowConfig.reuse || false
-
     this.setUseWindow(freeWindowInfo)
-    this.checkFreeWindow()
-    return freeWindow
   }
 
   /*
