@@ -5,7 +5,7 @@
  */
 const { app, BrowserWindow, webContents } = require('electron')
 const path = require('path')
-const electronVibrancy = require('electron-vibrancy')
+const electronVibrancy = require('@hxkuc/electron-vibrancy')
 
 /*
  * 简单说一下这个窗口的实现思路
@@ -97,7 +97,7 @@ class WindowsBox {
       }
     })
 
-    let modalPath = process.env.NODE_ENV === 'development'
+    let modalPath = process.env.NODE_ENV !== 'production'
       ? this.domain + this.freePage.model + '.html#' + this.freePage.router
       : path.join('file://', __dirname, '../../dist/electron', this.freePage.model) + '.html#' + this.freePage.router
     win.loadURL(modalPath)
@@ -108,7 +108,7 @@ class WindowsBox {
    * 适配窗口参数
    */
   getWindowConfig () {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV !== 'production') {
       this.baseWindowConfig.webPreferences = { webSecurity: false }
     }
     return this.baseWindowConfig
