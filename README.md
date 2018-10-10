@@ -24,11 +24,16 @@ Vue.prototype.$Win = Win
 index.vue
 ```
 let data = await this.$Win.openWin({
+  // browserwindow原生属性
   width: 700, // 窗口宽
   height: 600, // 窗口高
-  router: '/user', // 路由
-  data: {id: 1}, // 传送数据 
-  name: 'user' // 窗口名称
+  
+  // electron-vue-windows自定义的属性
+  windowConfig: {
+    router: '/user', // 路由 *必填
+    data: {id: 1}, // 传送数据 
+    name: 'user' // 窗口名称
+  }
 })
 console.log(data) // 新窗口返回的数据 {value: 2}
 ```
