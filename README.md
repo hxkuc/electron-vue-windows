@@ -10,39 +10,14 @@
 ```
 npm i -S electron-vue-windows
 ```
-在renderer/main.js里初始化加入以下代码
+在renderer/main.js里初始化加入以下代码（注意本插件依赖于vue和vue-router需要在vue和vue-router初始化完毕再加载）
 ```
+import Vue from 'vue'
+import router from './router' // 此处router文件为你的路由配置文件
 import Win from 'electron-vue-windows'
-Win.init()
+// 初始化插件，要传入实例化的路由
+Win.init(router)
 Vue.prototype.$Win = Win
-```
-然后新建一个backGround.vue文件，内容如下
-```
-<template>
-    <div></div>
-</template>
-<script>
-export default {
-  name: 'backGround',
-  beforeCreate: function () {
-    this.$Win.changePath(this)
-  }
-}
-</script>
-<style>
-</style>
-```
-把该vue文件加入根路由下
-```
-export default new Router({
-  routes: [
-    {
-      path: '/backGround',
-      name: 'backGround',
-      component: require('@/components/backGround').default
-    }
-  ]
-})
 ```
 ## 使用插件
 
@@ -75,5 +50,35 @@ this.$Win.closeWin(data)
 // Install `electron-debug` with `devtron`
 require('electron-debug')({ showDevTools: true }) // 把true改成false即可（在页面上按f12一样可以调出开发者工具）
 ```
+- 本插件主要适用于无边框窗口的优化，致力于用electron制作
 
 ## API介绍
+
+在子进程中使用
+
+openWin(option)
+
+作用：打开一个新窗口，并等待返回数据
+参数：本函数和browserwindow类似，但是只支持部分browserwindow的参数，支持的有，width, height, minimizable, maximizable, resizable, x, y, alwaysOnTop, skipTaskbar，以及新增加的参数windowConfig,windowConfig为一个对象有以下参数
+animation: '', // 选填 打开窗口动画，目前有fromRight,fromLeft,fromTop,fromBottom四种
+customAnimation: {
+    fromPosition: {}, // 窗口动画起点
+    time: 1000, // 动画时间
+    graphs: '' // 动画过度曲线
+}, // 选填 自定义动画，如果有此属性animation属性会失效
+name: '', // 选填 窗口名称
+router: '', // 必填 窗口路由
+reuse: '', // 选填 是否复用窗口
+reload: '', // 是否重新加载窗口
+vibrancy: '', // 选填 是否开启模糊透明
+data: '', // 要发送的基础数据
+fromWinId: '' // 来自id
+
+说明：为什么不支持browserwindow的其他参数，因为openWin函数调用的窗口是已经初始化了的窗口，所以只能动态的改变窗口的属性，如果browserwindow没有提供动态改变的接口，或者有些属性需要重载窗口的是不能使用的，这里增加的windowConfig配置是自定义的属性就是原browserwindow没有的所以单独放到一个对象里面便于区分，事实上大部分的功能都是依赖于这个对象的属性，
+用法：
+
+打开一个窗口
+
+
+附录：
+动画线条

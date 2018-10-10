@@ -16,7 +16,6 @@ class Win {
   move (data) {
     let animateId
     function animate (time) {
-      console.log(this)
       animateId = requestAnimationFrame(animate)
       TWEEN.update(time)
     }
@@ -129,29 +128,24 @@ class Win {
   }
 
   /*
-   * 监听路由跳转
-   */
-  changePath (vm) {
-    ipcRenderer.on('_changeModelPath', (event, arg) => {
-      vm.$router.push({ path: arg })
-    })
-  }
-
-  /*
    * 初始化
    */
-  init (config) {
+  init (router, config) {
+    // 初始化router，增加空白路由__BACKGROUND__
+    router.options.routes.push({path: '/__BACKGROUND__', component: { template: '<div></div>' }})
+    router.addRoutes(router.options.routes)
+    // 初始化box
     if (!this.WindowsBox) {
       this.WindowsBox = WindowsBox.init(config)
       this.WindowsBox.checkFreeWindow()
     }
-    this.addEventListenerForWindow()
+    this.addEventListenerForWindow(router)
   }
 
   /*
    * 给新窗口绑定close和resize事件（如果页面刷新要手动解除之前的监听事件）
    */
-  addEventListenerForWindow () {
+  addEventListenerForWindow (router) {
     let eventFun = (event, arg) => {
       this.Event.emit('_windowToMsg', arg)
     }
@@ -188,20 +182,25 @@ class Win {
       this.win.removeListener('close', closeWinInfo)
       remote.ipcMain.removeListener('_windowToMsg', eventFun)
     })
+
     this.win.on('close', closeWinInfo)
+    remote.ipcMain.on('_windowToMsg', eventFun)
     // 监听接收数据
     /*
     ipcRenderer.on('_windowToMsg', (event, data) => {
         this.Event.emit('_windowToMsg', data)
     })
     */
-    remote.ipcMain.on('_windowToMsg', eventFun)
+    // 监听路由变化
+    ipcRenderer.on('_changeModelPath', (event, arg) => {
+      router.push({ path: arg })
+    })
+
     ipcRenderer.on('_openWindowMsg', (event, data) => {
       this.Event.emit('_openWindowMsg' + data.fromWinId, data)
     })
+
     ipcRenderer.on('_moveing', (event, data) => {
-      console.log(data)
-      console.log(123)
       this.move(data)
     })
   }

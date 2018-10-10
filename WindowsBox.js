@@ -30,7 +30,7 @@ class WindowsBox {
     // 初始化页面
     this.freePage = {
       model: (config.freePage && config.freePage.model) || 'index',
-      router: (config.freePage && config.freePage.router) || '/backGround'
+      router: (config.freePage && config.freePage.router) || '/__BACKGROUND__'
     }
     this.domain = config.domain || 'http://localhost:9080/'
     // 基本的配置参数
@@ -166,7 +166,7 @@ class WindowsBox {
             // 路由跳转
             this.windowRouterChange(freeWindow, option.windowConfig.router)
             // 窗口基础状态
-            this.setWindowConfig(this.getBaseConfig(option), freeWindow)
+            this.setWindowConfig(this.getBaseConfig(option, freeWindow), freeWindow)
             // 如果有动画生成动画后状态
             if (option.windowConfig.animation || option.windowConfig.customAnimation) {
               this.animation(freeWindow, this.getToConfig(option))
@@ -186,7 +186,7 @@ class WindowsBox {
         // 路由跳转
         this.windowRouterChange(freeWindow, option.windowConfig.router)
         // 窗口基础状态
-        this.setWindowConfig(this.getBaseConfig(option), freeWindow)
+        this.setWindowConfig(this.getBaseConfig(option, freeWindow), freeWindow)
         // 如果有动画生成动画后状态
         if (option.windowConfig.animation || option.windowConfig.customAnimation) {
           this.animation(freeWindow, this.getToConfig(option))
@@ -202,7 +202,7 @@ class WindowsBox {
       // 路由跳转
       this.windowRouterChange(freeWindow, option.windowConfig.router)
       // 窗口基础状态
-      this.setWindowConfig(this.getBaseConfig(option), freeWindow)
+      this.setWindowConfig(this.getBaseConfig(option, freeWindow), freeWindow)
       // 如果有动画生成动画后状态
       if (option.windowConfig.animation || option.windowConfig.customAnimation) {
         this.animation(freeWindow, this.getToConfig(option))
@@ -212,81 +212,6 @@ class WindowsBox {
       this.checkFreeWindow()
     }
     return freeWindow
-
-    /* let freeWindow, freeWindowInfo
-    if (option.windowConfig.name) {
-      let winInfo = this._windowList.find(row => row.name === option.windowConfig.name)
-      if (winInfo) {
-        if (!option.windowConfig.reload) {
-          return BrowserWindow.fromId(winInfo.id)
-        } else {
-          freeWindow = BrowserWindow.fromId(winInfo.id)
-          freeWindowInfo = winInfo
-        }
-      } else {
-        freeWindowInfo = this._getFreeWindow()
-        freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
-      }
-    } else {
-      freeWindowInfo = this._getFreeWindow()
-      freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
-      // option.windowConfig.name = freeWindowInfo.id
-    }
-    console.log(option)
-    if (option.windowConfig.name) {
-      if (freeWindowInfo.reuse) {
-        if (freeWindowInfo.isUse) {
-          // 无动画直接显示
-          // 先发送路由跳转
-          this.windowRouterChange(freeWindow, option.windowConfig.router)
-        } else {
-          // 有动画
-          this.windowRouterChange(freeWindow, option.windowConfig.router)
-          // 生成动画前和动画后状态
-          let baseConfig = this.getBaseConfig(option)
-          this.setWindowConfig(baseConfig, freeWindow)
-          // 如果有动画生成动画后状态
-          if (option.windowConfig.animation || option.windowConfig.customAnimation) {
-            let toConfig = this.getToConfig(option)
-            this.animation(freeWindow, toConfig)
-          }
-        }
-      } else {
-        console.log(freeWindowInfo)
-        if (freeWindowInfo.isUse) {
-          if (option.windowConfig.reload) {
-            // 刷新页面无动画
-            this.windowRouterChange(freeWindow, option.windowConfig.router)
-          }
-        } else {
-          this.windowRouterChange(freeWindow, option.windowConfig.router)
-          let baseConfig = this.getBaseConfig(option)
-          console.log(baseConfig)
-          this.setWindowConfig(baseConfig, freeWindow)
-          // 如果有动画生成动画后状态
-          if (option.windowConfig.animation || option.windowConfig.customAnimation) {
-            let toConfig = this.getToConfig(option)
-            this.animation(freeWindow, toConfig)
-          }
-        }
-      }
-    } else {
-      // 有动画
-      this.windowRouterChange(freeWindow, option.windowConfig.router)
-      let baseConfig = this.getBaseConfig(option)
-      this.setWindowConfig(baseConfig, freeWindow)
-      // 如果有动画生成动画后状态
-      if (option.windowConfig.animation || option.windowConfig.customAnimation) {
-        let toConfig = this.getToConfig(option)
-        this.animation(freeWindow, toConfig)
-      }
-    }
-
-    // 更新参数
-
-    this.checkFreeWindow()
-    return freeWindow
-    */
   }
 
   /*
@@ -306,11 +231,10 @@ class WindowsBox {
    * @desc 获取基础配置
    * {vibrancy, width, height, minimizable, maximizable, resizable, x, y, center, alwaysOnTop, skipTaskbar}
    */
-  getBaseConfig (option) {
+  getBaseConfig (option, freeWindow) {
     let config = {}
     // 判断配置中是否有动画
     let noAnimation = !option.windowConfig.animation && !option.windowConfig.customAnimation
-    console.log(noAnimation)
     if (noAnimation) {
       if (option.x && option.y) {
         config.x = option.x || ''
@@ -320,22 +244,29 @@ class WindowsBox {
       }
     } else {
       if (option.windowConfig.animation) {
+        option.width = option.width || 800
+        option.height = option.height || 600
+        if (!option.x || !option.y) {
+          let position = freeWindow.getPosition()
+          option.x = position[0] - option.width / 2
+          option.y = position[1] - option.height / 2
+        }
         switch (option.windowConfig.animation) {
           case 'fromRight':
-            config.x = option.x + option.width || 800
+            config.x = option.x + option.width
             config.y = option.y
             break
           case 'fromLeft':
-            config.x = option.x - option.width || 800
+            config.x = option.x - option.width
             config.y = option.y
             break
           case 'fromTop':
             config.x = option.x
-            config.y = option.y - option.height || 800
+            config.y = option.y - option.height
             break
           case 'fromBottom':
             config.x = option.x
-            config.y = option.y + option.height || 800
+            config.y = option.y + option.height
             break
         }
       }
@@ -345,8 +276,8 @@ class WindowsBox {
       }
     }
     config.vibrancy = option.windowConfig.vibrancy !== false
-    config.width = option.width || 800
-    config.height = option.height || 600
+    config.width = option.width
+    config.height = option.height
     config.minimizable = option.minimizable || false
     config.maximizable = option.maximizable || false
     config.resizable = option.resizable || false
