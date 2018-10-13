@@ -27,12 +27,9 @@ class WindowsBox {
   constructor (config) {
     config = config || {}
     this.freeWindowNum = config.freeWindowNum || 1 // 允许空闲的窗口数量
+    this.port = config.port || 9080
     // 初始化页面
-    this.freePage = {
-      model: (config.freePage && config.freePage.model) || 'index',
-      router: (config.freePage && config.freePage.router) || '/__BACKGROUND__'
-    }
-    this.domain = config.domain || 'http://localhost:9080/'
+    this.router = '/__BACKGROUND__'
     // 基本的配置参数
     this.baseWindowConfig = {
       show: false,
@@ -42,7 +39,12 @@ class WindowsBox {
       height: 0
     }
     this._windowList = [] // 窗口容器
-    this.WIN = null
+    this.checkFreeWindow()
+    // 单例模式
+    if (WindowsBox.prototype.__Instance === undefined) {
+      WindowsBox.prototype.Instance = this
+    }
+    return WindowsBox.prototype.__Instance
   }
 
   /*
@@ -55,8 +57,7 @@ class WindowsBox {
       id: win.id,
       name: '',
       isUse: false,
-      model: this.freePage.model,
-      router: this.freePage.router,
+      router: this.router,
       sendMsg: {},
       backMsg: {},
       fromId: '',
@@ -98,8 +99,8 @@ class WindowsBox {
     })
 
     let modalPath = process.env.NODE_ENV !== 'production'
-      ? this.domain + this.freePage.model + '.html#' + this.freePage.router
-      : path.join('file://', __dirname, '../../dist/electron', this.freePage.model) + '.html#' + this.freePage.router
+      ? 'http:localhost:' + this.port + '/index.html#' + this.router
+      : path.join('file://', __dirname, '../../dist/electron') + 'index.html#' + this.router
     win.loadURL(modalPath)
     return win
   }
@@ -129,13 +130,6 @@ class WindowsBox {
         this.creatFreeWindow() // 暂时循环调用，后期用延时
       }
     }
-  }
-
-  static init (config) {
-    if (!this.WIN) {
-      this.WIN = new WindowsBox(config)
-    }
-    return this.WIN
   }
 
   /*

@@ -191,6 +191,7 @@ class Win {
         this.Event.emit('_windowToMsg', data)
     })
     */
+    // 注意ipcRenderer是属于webContents下的，会随着页面刷新重载，所以刷新的时候不需要手动清除监听
     // 监听路由变化
     ipcRenderer.on('_changeModelPath', (event, arg) => {
       router.push({ path: arg })
