@@ -132,12 +132,11 @@ class Win {
    */
   init (router, config) {
     // 初始化router，增加空白路由__BACKGROUND__
-    router.options.routes.push({path: '/__BACKGROUND__', component: { template: '<div></div>' }})
+    router.options.routes.push({path: '/__BACKGROUND__', component: { template: '<div>11</div>' }})
     router.addRoutes(router.options.routes)
     // 初始化box
     if (!this.WindowsBox) {
-      this.WindowsBox = WindowsBox.init(config)
-      this.WindowsBox.checkFreeWindow()
+      this.WindowsBox = new WindowsBox(config)
     }
     this.addEventListenerForWindow(router)
   }

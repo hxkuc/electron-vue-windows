@@ -1,6 +1,6 @@
 {
   "name": "electron-vue-windows",
-  "version": "1.0.22",
+  "version": "1.0.30",
   "description": "",
   "main": "./index.js",
   "scripts": {
@@ -9,6 +9,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/hxkuc/electron-vue-windows.git"
+  },
+  "dependencies": {
+    "@hxkuc/electron-vibrancy": "^0.1.4",
+    "@tweenjs/tween.js": "^17.2.0"
   },
   "author": "huang",
   "license": "ISC"

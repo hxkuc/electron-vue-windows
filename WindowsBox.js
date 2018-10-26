@@ -39,10 +39,10 @@ class WindowsBox {
       height: 0
     }
     this._windowList = [] // 窗口容器
-    this.checkFreeWindow()
     // 单例模式
     if (WindowsBox.prototype.__Instance === undefined) {
-      WindowsBox.prototype.Instance = this
+      WindowsBox.prototype.__Instance = this
+      this.checkFreeWindow()
     }
     return WindowsBox.prototype.__Instance
   }
@@ -110,7 +110,7 @@ class WindowsBox {
    */
   getWindowConfig () {
     if (process.env.NODE_ENV !== 'production') {
-      this.baseWindowConfig.webPreferences = { webSecurity: false }
+      this.baseWindowConfig.webPreferences = { webSecurity: false, devTools: false }
     }
     return this.baseWindowConfig
   }
@@ -177,14 +177,14 @@ class WindowsBox {
       } else {
         freeWindowInfo = this._getFreeWindow()
         freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
-        // 路由跳转
-        this.windowRouterChange(freeWindow, option.windowConfig.router)
         // 窗口基础状态
         this.setWindowConfig(this.getBaseConfig(option, freeWindow), freeWindow)
         // 如果有动画生成动画后状态
         if (option.windowConfig.animation || option.windowConfig.customAnimation) {
           this.animation(freeWindow, this.getToConfig(option))
         }
+        // 路由跳转
+        this.windowRouterChange(freeWindow, option.windowConfig.router)
         // 更新队列
         this.refreshFreeWindowInfo(freeWindowInfo, option)
         this.checkFreeWindow()
@@ -193,14 +193,14 @@ class WindowsBox {
       // 拉出窗口
       freeWindowInfo = this._getFreeWindow()
       freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
-      // 路由跳转
-      this.windowRouterChange(freeWindow, option.windowConfig.router)
       // 窗口基础状态
       this.setWindowConfig(this.getBaseConfig(option, freeWindow), freeWindow)
       // 如果有动画生成动画后状态
       if (option.windowConfig.animation || option.windowConfig.customAnimation) {
         this.animation(freeWindow, this.getToConfig(option))
       }
+      // 路由跳转
+      this.windowRouterChange(freeWindow, option.windowConfig.router)
       // 更新队列
       this.refreshFreeWindowInfo(freeWindowInfo, option)
       this.checkFreeWindow()
