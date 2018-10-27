@@ -1,7 +1,6 @@
-
 ## 功能介绍
 
-主要针对electron-vue做的插件，必在electron-vue的基础上使用，针对electron-vue中打开新的无边框窗口缓慢、传参困难等问题做的优化，安装方式简单、使用简单, 点击[这里](https://github.com/hxkuc/electron-vue-windows-demo)可以查看简单的demo
+主要针对electron-vue做的插件，必在electron-vue的基础上使用，针对electron-vue中打开新的无边框窗口缓慢、传参困难等问题做的优化，安装方式简单、使用简单, 点击[这里](https://github.com/hxkuc/electron-ui)可以查看简单的demo
 
 ## 安装步骤
 
@@ -57,7 +56,7 @@ require('electron-debug')({ showDevTools: true }) // 把true改成false即可（
 ```
 - 本插件主要适用于无边框窗口的优化，致力于用electron制作
 
-## 问题
+## 可能遇到的问题
 由于使用了c++原生模块，所以在安装本插件时可能会遇到已下的问题，大概说下解决方案
 1.没有安装python导致的报错![image.png](https://upload-images.jianshu.io/upload_images/13048954-de877bc79c767fad.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 解决办法：安装python，具体方法可以参考node-gyp的文档 https://github.com/nodejs/node-gyp
@@ -220,4 +219,4 @@ console.log(data) // {id: 1}
 let data = {value: 2}
 this.$Win.closeWin(data)
 ```
-## openWin(option)
+## closeWin(option)
