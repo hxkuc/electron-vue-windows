@@ -58,24 +58,29 @@ require('electron-debug')({ showDevTools: true }) // 把true改成false即可（
 
 ## 可能遇到的问题
 由于使用了c++原生模块，所以在安装本插件时可能会遇到已下的问题，大概说下解决方案
-1.没有安装python导致的报错![image.png](https://upload-images.jianshu.io/upload_images/13048954-de877bc79c767fad.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+1.没有安装python导致的报错
+![image.png](https://upload-images.jianshu.io/upload_images/13048954-de877bc79c767fad.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 解决办法：安装python，具体方法可以参考node-gyp的文档 https://github.com/nodejs/node-gyp
 
-2.![image.png](https://upload-images.jianshu.io/upload_images/13048954-1984ebec59bac82b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+2.
+![image.png](https://upload-images.jianshu.io/upload_images/13048954-1984ebec59bac82b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 解决办法： 安装electron-rebuild参考文档：https://electronjs.org/docs/tutorial/using-native-node-modules
 
-3.![image.png](https://upload-images.jianshu.io/upload_images/13048954-e277b87e7c1c7cc1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+3.
+![image.png](https://upload-images.jianshu.io/upload_images/13048954-e277b87e7c1c7cc1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 解决方法：和第一个报错一样，如果还报错看看是不是没有设置环境变量，或者python版本不对引起的
 
-4.![image.png](https://upload-images.jianshu.io/upload_images/13048954-f481b4fc629adcf1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+4.
+![image.png](https://upload-images.jianshu.io/upload_images/13048954-f481b4fc629adcf1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 解决办法： 使用electron-rebuild重新rebuild，`npm install --save-dev electron-rebuild` 然后`.\node_modules\.bin\electron-rebuild.cmd`，具体可参考https://electronjs.org/docs/tutorial/using-native-node-modules
-5.![image.png](https://upload-images.jianshu.io/upload_images/13048954-7db28d7b5d9cac22.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+5.
+![image.png](https://upload-images.jianshu.io/upload_images/13048954-7db28d7b5d9cac22.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 解决办法： 网络原因，重新执行rebuild
-
-
-
-
-
 
 
 ## API介绍
@@ -219,4 +224,30 @@ console.log(data) // {id: 1}
 let data = {value: 2}
 this.$Win.closeWin(data)
 ```
-## closeWin(option)
+## getParameter()
+- 作用： 获取窗口传参
+- 返回： `data: {object}`
+- 用法： 
+```
+let data = this.$Win.getParameter()
+console.log(data) // {id: 1}
+```
+
+## closeWin(data, win)
+- 作用： 关闭一个窗口
+- 参数：data:{object}要传回的数据，win: {browserwindow}窗口实例
+- 用法：
+关闭当前窗口并发送数据
+```
+this.$Win.closeWin({value:1})
+```
+关闭name为'name'窗口
+```
+let win = this.$Win.getWinByName('name')
+this.$Win.closeWin({value:1}, win)
+```
+## exitWin(data, win)
+- 作用：复用窗口的退出，只用在复用窗口上，用于关闭后台窗口进程
+- 参数： 同closeWin
+- 用法： 同closeWin
+
