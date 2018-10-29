@@ -110,7 +110,7 @@ class WindowsBox {
    */
   getWindowConfig () {
     if (process.env.NODE_ENV !== 'production') {
-      this.baseWindowConfig.webPreferences = { webSecurity: false, devTools: false }
+      this.baseWindowConfig.webPreferences = { webSecurity: false }
     }
     return this.baseWindowConfig
   }
