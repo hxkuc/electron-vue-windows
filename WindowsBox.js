@@ -270,6 +270,7 @@ class WindowsBox {
       }
     }
     config.vibrancy = option.windowConfig.vibrancy !== false
+    config.vibrancyOptions = option.windowConfig.vibrancyOptions || {}
     config.width = option.width
     config.height = option.height
     config.minimizable = option.minimizable || false
@@ -285,13 +286,11 @@ class WindowsBox {
    *
    */
   getToConfig (option) {
-    console.log(option)
     let config = {}
     config.x = option.x
     config.y = option.y
     config.time = (option.windowConfig.customAnimation && option.windowConfig.customAnimation.time) || 1000
     config.graphs = (option.windowConfig.customAnimation && option.windowConfig.customAnimation.graphs) || 'Exponential.Out'
-    console.log(config)
     return config
   }
 
@@ -325,9 +324,17 @@ class WindowsBox {
    */
   setWindowConfig (config, freeWindow) {
     // 是否开启背景模糊
-    if (config.vibrancy !== false) {
+    if (config.vibrancy) {
       freeWindow.on('resize', () => {
-        electronVibrancy.SetVibrancy(freeWindow, 0)
+        electronVibrancy.AddView(freeWindow, {
+          Material: 0,
+          Width: config.width || 800,
+          Height: config.height || 600,
+          X: config.vibrancyOptions.padding || 5,
+          Y: config.vibrancyOptions.padding || 5,
+          borderRadius: config.vibrancyOptions.borderRadius || 5,
+          ResizeMask: 2
+        })
       })
     }
     // 重置窗口大小

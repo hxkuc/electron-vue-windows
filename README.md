@@ -115,7 +115,11 @@ option = {
     router: '', // 必填 窗口路由
     reuse: '', // 选填 是否复用窗口（如果选此选项使用closeWin方法不会销毁窗口，应该使用exitWin销毁窗口）
     reload: '', // 是否重新加载窗口（指重新加载窗口路由）
-    vibrancy: '', // 选填 是否开启模糊透明
+    vibrancy: '', // 选填 是否开启模糊透明（默认false）
+    vibrancyOptions：{
+      padding: 5, // 默认模糊窗口的padding用来留窗口阴影
+      borderRadius: 5, // 模糊窗口的圆角度数
+    }, // 选填
     data: '', // 要发送的基础数据
     fromWinId: '' // 来自id
   }
@@ -140,7 +144,7 @@ win.show()
 this.$Win.closeWin()
 win.close() // 不推荐
 ```
-创建透明窗口（vibrancy属性设置为false）
+创建模糊透明窗口（vibrancy属性设置为true）
 ```
 let win = this.$Win.createWin({
   width: 800,
@@ -148,7 +152,7 @@ let win = this.$Win.createWin({
   windowConfig: {
     router: '/index',
     name: 'index', // 窗口名字，如果该name窗口存在会直接显示，不会重新创建    
-    vibrancy: false  
+    vibrancy: true  
   }
 })
 win.show()
