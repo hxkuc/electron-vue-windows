@@ -269,7 +269,7 @@ class WindowsBox {
         config.y = option.windowConfig.customAnimation.fromPosition.y
       }
     }
-    config.vibrancy = option.windowConfig.vibrancy !== false
+    config.vibrancy = option.windowConfig.vibrancy || false
     config.vibrancyOptions = option.windowConfig.vibrancyOptions || {}
     config.width = option.width
     config.height = option.height

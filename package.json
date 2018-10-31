@@ -1,10 +1,11 @@
 {
   "name": "electron-vue-windows",
-  "version": "1.0.31",
+  "version": "1.0.33",
   "description": "",
   "main": "./index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": ".\\node_modules\\.bin\\electron-rebuild.cmd"
   },
   "repository": {
     "type": "git",
@@ -12,7 +13,8 @@
   },
   "dependencies": {
     "@hxkuc/electron-vibrancy": "^0.1.4",
-    "@tweenjs/tween.js": "^17.2.0"
+    "@tweenjs/tween.js": "^17.2.0",
+    "electron-rebuild": "^1.8.2"
   },
   "author": "huang",
   "license": "ISC"
