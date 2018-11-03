@@ -98,9 +98,9 @@ class WindowsBox {
       }
     })
 
-    let modalPath = (process.env.NODE_ENV && process.env.NODE_ENV !== 'production')
-      ? 'http:localhost:' + this.port + '/index.html#' + this.router
-      : path.join('file://', __dirname, '../../dist/electron/') + 'index.html#' + this.router
+    let modalPath = this.isPackaged()
+      ? path.join('file://', __dirname, '../../dist/electron/') + 'index.html#' + this.router
+      : 'http:localhost:' + this.port + '/index.html#' + this.router
     win.loadURL(modalPath)
     return win
   }
@@ -109,7 +109,7 @@ class WindowsBox {
    * 适配窗口参数
    */
   getWindowConfig () {
-    if (process.env.NODE_ENV && process.env.NODE_ENV !== 'production') {
+    if (!this.isPackaged()) {
       this.baseWindowConfig.webPreferences = { webSecurity: false }
     }
     return this.baseWindowConfig
@@ -411,6 +411,14 @@ class WindowsBox {
    */
   getWindowList () {
     return this._windowList
+  }
+
+  isPackaged () {
+    const execFile = path.basename(process.execPath).toLowerCase()
+    if (process.platform === 'win32') {
+      return execFile !== 'electron.exe'
+    }
+    return execFile !== 'electron'
   }
 }
 
