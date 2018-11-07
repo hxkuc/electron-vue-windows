@@ -6,6 +6,7 @@
 const { app, BrowserWindow, webContents } = require('electron')
 const path = require('path')
 const electronVibrancy = require('@hxkuc/electron-vibrancy')
+const TWEEN = require('@tweenjs/tween.js')
 
 /*
  * 简单说一下这个窗口的实现思路
@@ -163,7 +164,12 @@ class WindowsBox {
             this.setWindowConfig(this.getBaseConfig(option, freeWindow), freeWindow)
             // 如果有动画生成动画后状态
             if (option.windowConfig.animation || option.windowConfig.customAnimation) {
-              this.animation(freeWindow, this.getToConfig(option))
+              this.animation({
+                win: freeWindow,
+                to: this.getToConfig(option),
+                time: (option.windowConfig.customAnimation && option.windowConfig.customAnimation.time) || 1000,
+                graphs: (option.windowConfig.customAnimation && option.windowConfig.customAnimation.graphs) || 'Exponential.Out'
+              })
             }
             // 更新队列
             this.refreshFreeWindowInfo(freeWindowInfo, option)
@@ -177,14 +183,19 @@ class WindowsBox {
       } else {
         freeWindowInfo = this._getFreeWindow()
         freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
+        // 路由跳转
+        this.windowRouterChange(freeWindow, option.windowConfig.router)
         // 窗口基础状态
         this.setWindowConfig(this.getBaseConfig(option, freeWindow), freeWindow)
         // 如果有动画生成动画后状态
         if (option.windowConfig.animation || option.windowConfig.customAnimation) {
-          this.animation(freeWindow, this.getToConfig(option))
+          this.animation({
+            win: freeWindow,
+            to: this.getToConfig(option),
+            time: (option.windowConfig.customAnimation && option.windowConfig.customAnimation.time) || 1000,
+            graphs: (option.windowConfig.customAnimation && option.windowConfig.customAnimation.graphs) || 'Exponential.Out'
+          })
         }
-        // 路由跳转
-        this.windowRouterChange(freeWindow, option.windowConfig.router)
         // 更新队列
         this.refreshFreeWindowInfo(freeWindowInfo, option)
         this.checkFreeWindow()
@@ -193,14 +204,19 @@ class WindowsBox {
       // 拉出窗口
       freeWindowInfo = this._getFreeWindow()
       freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
+      // 路由跳转
+      this.windowRouterChange(freeWindow, option.windowConfig.router)
       // 窗口基础状态
       this.setWindowConfig(this.getBaseConfig(option, freeWindow), freeWindow)
       // 如果有动画生成动画后状态
       if (option.windowConfig.animation || option.windowConfig.customAnimation) {
-        this.animation(freeWindow, this.getToConfig(option))
+        this.animation({
+          win: freeWindow,
+          to: this.getToConfig(option),
+          time: (option.windowConfig.customAnimation && option.windowConfig.customAnimation.time) || 1000,
+          graphs: (option.windowConfig.customAnimation && option.windowConfig.customAnimation.graphs) || 'Exponential.Out'
+        })
       }
-      // 路由跳转
-      this.windowRouterChange(freeWindow, option.windowConfig.router)
       // 更新队列
       this.refreshFreeWindowInfo(freeWindowInfo, option)
       this.checkFreeWindow()
@@ -289,8 +305,8 @@ class WindowsBox {
     let config = {}
     config.x = option.x
     config.y = option.y
-    config.time = (option.windowConfig.customAnimation && option.windowConfig.customAnimation.time) || 1000
-    config.graphs = (option.windowConfig.customAnimation && option.windowConfig.customAnimation.graphs) || 'Exponential.Out'
+    config.width = option.width || 800
+    config.height = option.height || 800
     return config
   }
 
@@ -309,12 +325,40 @@ class WindowsBox {
 
   /*
    * @desc 跳转动画
+     @param {win: win, from: {}, to:{}, time: 1000, graphs: ''}
    */
-  animation (win, toConfig, fromConfig) {
-    win.webContents.send('_moveing', {
-      fromConfig: fromConfig,
-      toConfig: toConfig
-    })
+  animation (option) {
+    if (!option.win) {
+      return
+    }
+    if (!option.from) {
+      let position = option.win.getPosition()
+      let size = option.win.getSize()
+      let opacity = option.win.getOpacity()
+      option.from = {
+        x: position[0],
+        y: position[1],
+        width: size[0],
+        height: size[1],
+        opacity: opacity
+      }
+    }
+    console.log(option)
+    let animateId
+    TWEEN.removeAll()
+    let tween = new TWEEN.Tween(option.from)
+      .to( option.to, option.time)
+      .onUpdate(function (a) {
+        option.win.setPosition(parseInt(a.x), parseInt(a.y))
+        option.win.setOpacity(a.opacity)
+      }).onComplete(function () {
+        clearInterval(animateId);
+      }).start()
+    let graphs = option.graphs.split('.')
+    tween.easing(TWEEN.Easing[graphs[0]][graphs[1]])
+    animateId = setInterval(function () {
+      TWEEN.update()
+    }, 17)
   }
 
   /*

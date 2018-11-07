@@ -1,44 +1,12 @@
 const { remote, ipcRenderer } = require('electron')
 const WindowsBox = remote.require('electron-vue-windows')
 const events = require('events')
-const TWEEN = require('@tweenjs/tween.js')
 
 class Win {
   constructor () {
     this.win = remote.getCurrentWindow()
     this.WindowsBox = null
     this.Event = new events.EventEmitter()
-  }
-
-  /*
-   * 动画
-   */
-  move (data) {
-    let animateId
-    function animate (time) {
-      animateId = requestAnimationFrame(animate)
-      TWEEN.update(time)
-    }
-
-    let fromPos = this.win.getPosition()
-
-    TWEEN.removeAll()
-    let win = this.win
-    let tween = new TWEEN.Tween({
-      x: fromPos[0],
-      y: fromPos[1],
-      z: 0.5
-    })
-      .to({x: data.toConfig.x, y: data.toConfig.y, z: 1}, data.toConfig.time)
-      .onUpdate(function (a) {
-        win.setPosition(parseInt(a.x), parseInt(a.y))
-        win.setOpacity(a.z)
-      }).onComplete(function () {
-        cancelAnimationFrame(animateId)
-      }).start()
-    let graphs = data.toConfig.graphs.split('.')
-    tween.easing(TWEEN.Easing[graphs[0]][graphs[1]])
-    animate()
   }
 
   /*
@@ -199,10 +167,6 @@ class Win {
     ipcRenderer.on('_openWindowMsg', (event, data) => {
       this.Event.emit('_openWindowMsg' + data.fromWinId, data)
     })
-
-    ipcRenderer.on('_moveing', (event, data) => {
-      this.move(data)
-    })
   }
 
   /*
@@ -283,11 +247,30 @@ class Win {
   getWinByName (name) {
     let winList = this.WindowsBox.getWindowList()
     let winInfo = winList.filter(row => row.name === name).shift()
-    try {
-      return remote.BrowserWindow.fromId(winInfo.id)
-    } catch (err) {
-      throw new Error('can not find this window!')
+    return winInfo ? remote.BrowserWindow.fromId(winInfo.id) : null
+  }
+
+  /*
+   * 动画
+   */
+  animation (option) {
+    if (!option.win) {
+      option.win = this.win
     }
+    option.time = option.time || 1000
+    option.graphs = option.graphs || 'Exponential.Out'
+    console.log(option)
+    this.WindowsBox.animation(option)
+  }
+
+  /*
+   * 跳转路由
+   */
+  routerPush (router, win) {
+    if (!win) {
+      win = this.win
+    }
+    this.WindowsBox.windowRouterChange(win, router)
   }
 }
 
