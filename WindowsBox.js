@@ -29,17 +29,16 @@ class WindowsBox {
     config = config || {}
     this.freeWindowNum = config.freeWindowNum || 1 // 允许空闲的窗口数量
     this.port = config.port || 9080
-    // 初始化页面
     this.router = '/__BACKGROUND__'
-    // 基本的配置参数
+    this._windowList = [] // 窗口容器
     this.baseWindowConfig = {
+      webPreferences: { webSecurity: this.isPackaged() },
       show: false,
       transparent: true,
       frame: false,
       width: 0,
       height: 0
     }
-    this._windowList = [] // 窗口容器
     // 单例模式
     if (WindowsBox.prototype.__Instance === undefined) {
       WindowsBox.prototype.__Instance = this
@@ -52,7 +51,7 @@ class WindowsBox {
    * 打开新的空白窗口等待加载
    */
   creatFreeWindow () {
-    let win = new BrowserWindow(this.getWindowConfig())
+    let win = new BrowserWindow(this.baseWindowConfig)
     // 设置传参
     this._windowList.push({
       id: win.id,
@@ -76,7 +75,7 @@ class WindowsBox {
         let appShouldQuit = true
         for (var i = allWindows.length - 1; i >= 0; i--) {
           let key = _windowList.indexOf(allWindows[i].id)
-          if (allWindows[i].id != winId && (key < 0 || (key > -1 && this.getWindowInfo(_windowList[key]).isUse))) appShouldQuit = false
+          if (allWindows[i].id != winId && (key < 0 || (key > -1 && this.getWindowInfoById(_windowList[key]).isUse))) appShouldQuit = false
         }
         if (appShouldQuit) app.quit()
         win = null
@@ -104,16 +103,6 @@ class WindowsBox {
       : 'http:localhost:' + this.port + '/index.html#' + this.router
     win.loadURL(modalPath)
     return win
-  }
-
-  /*
-   * 适配窗口参数
-   */
-  getWindowConfig () {
-    if (!this.isPackaged()) {
-      this.baseWindowConfig.webPreferences = { webSecurity: false }
-    }
-    return this.baseWindowConfig
   }
 
   /*
@@ -147,9 +136,9 @@ class WindowsBox {
     let freeWindow, freeWindowInfo
     if (option.windowConfig.name) {
       // 查询是否有该name窗口存在
-      let winInfo = this._windowList.find(row => row.name === option.windowConfig.name)
+      let winInfo = this.getWindowInfoByName(option.windowConfig.name)
       if (winInfo) {
-        freeWindow = BrowserWindow.fromId(winInfo.id)
+        freeWindow = this.getWinById(winInfo.id)
         freeWindowInfo = winInfo
         if (freeWindowInfo.reuse) {
           if (freeWindowInfo.isUse) {
@@ -181,7 +170,7 @@ class WindowsBox {
           }
         }
       } else {
-        freeWindowInfo = this._getFreeWindow()
+        freeWindowInfo = this.getNewWindow()
         freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
         // 路由跳转
         this.windowRouterChange(freeWindow, option.windowConfig.router)
@@ -202,7 +191,7 @@ class WindowsBox {
       }
     } else {
       // 拉出窗口
-      freeWindowInfo = this._getFreeWindow()
+      freeWindowInfo = this.getNewWindow()
       freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
       // 路由跳转
       this.windowRouterChange(freeWindow, option.windowConfig.router)
@@ -234,7 +223,7 @@ class WindowsBox {
     freeWindowInfo.name = option.windowConfig.name
     freeWindowInfo.fromId = option.windowConfig.fromWinId
     freeWindowInfo.reuse = option.windowConfig.reuse || false
-    this.setUseWindow(freeWindowInfo)
+    this.setWindowInfo(freeWindowInfo)
   }
 
   /*
@@ -311,7 +300,8 @@ class WindowsBox {
   }
 
   /*
-   * @desc 新窗口路由跳转
+   * @desc 新窗口路由跳转option
+   * @parame option {object} {win: win, name: '', data: {}, router: ''}
    */
   windowRouterChange (win, router) {
     if (win.webContents.isLoading()) {
@@ -415,39 +405,14 @@ class WindowsBox {
   /*
    * 取出一个空白窗口并且返回（仅仅取出对象）
    */
-  _getFreeWindow () {
+  getNewWindow () {
     // 没有使用的窗口并且不是复用的窗口
     let winInfo = this._windowList.find(row => row.isUse === false && !row.reuse)
     if (!winInfo) {
       let win = this.creatFreeWindow()
-      return this._windowList.find(row => row.id === win.id)
+      return this.getWindowInfoById(win.id)
     }
     return winInfo
-  }
-
-  /*
-   * 根据窗口id设置某一窗口为已使用
-   */
-  setUseWindow (freeWindowInfo) {
-    this._windowList = this._windowList.map(row => {
-      return row.id === freeWindowInfo.id ? freeWindowInfo : row
-    })
-  }
-
-  /*
-   * 获取窗口的数据
-   */
-  getWindowInfo (id) {
-    return this._windowList.find(row => row.id === id)
-  }
-
-  /*
-   * 设置窗口的数据
-   */
-  setWindowInfo (data, id) {
-    this._windowList = this._windowList.map(row => {
-      return row.id === id ? data : row
-    })
   }
 
   /*
@@ -463,6 +428,54 @@ class WindowsBox {
       return execFile !== 'electron.exe'
     }
     return execFile !== 'electron'
+  }
+
+  /*
+   * 路由跳转
+   * @parame option {object} {win: win, name: '', data: {}, router: ''}
+   */
+  routerPush (option) {
+    // 先跳转路由，然后重新设置基础数据
+    // 如果没有win和name直接返回
+    if (!option.win && !option.name) return
+    let windowInfo
+    if (option.name) {
+      windowInfo = this.getWindowInfoByName(option.name)
+    } else {
+      windowInfo = this.getWindowInfoById(option.win.id)
+    }
+    if (!windowInfo) return
+    let win = this.getWinById(windowInfo.id)
+    this.windowRouterChange(win, option.router)
+    // 设置队列信息
+    windowInfo.router = option.router
+    windowInfo.data = option.data
+    this.setWindowInfo(windowInfo)
+  }
+
+  getWindowInfoById (id) {
+    return this._windowList.find(row => row.id === id)
+  }
+
+  getWindowInfoByName (name) {
+    return this._windowList.find(row => row.name === name)
+  }
+
+  getWinById (id) {
+    return BrowserWindow.fromId(id)
+  }
+
+  getWinByName (name) {
+    let windowInfo = this.getWindowInfoByName(name)
+    if (!windowInfo) return
+    return this.getWinById(windowInfo.id)
+  }
+
+  /*
+   * 设置窗口的数据
+   */
+  setWindowInfo (data) {
+    this._windowList = this._windowList.map(row => row.id === data.id ? data : row)
   }
 }
 

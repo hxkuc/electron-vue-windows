@@ -31,14 +31,14 @@ class Win {
   closeWin (data, win) {
     // 判断是否是复用窗口
     win = win || this.win
-    let _windowInfo = this.WindowsBox.getWindowInfo(win.id)
+    let _windowInfo = this.WindowsBox.getWindowInfoById(win.id)
     // 没有调用默认关闭
     if (_windowInfo) {
       _windowInfo.isUse = false
       if (data) {
         _windowInfo.backMsg = data
       }
-      this.WindowsBox.setWindowInfo(_windowInfo, win.id)
+      this.WindowsBox.setWindowInfo(_windowInfo)
       if (_windowInfo.reuse) {
         // 复用窗口隐藏hide
         if (_windowInfo.fromId) {
@@ -65,9 +65,9 @@ class Win {
    */
   exitWin (data, win) {
     win = win || this.win
-    let _windowInfo = this.WindowsBox.getWindowInfo(win.id)
+    let _windowInfo = this.WindowsBox.getWindowInfoById(win.id)
     _windowInfo.reuse = false
-    this.WindowsBox.setWindowInfo(_windowInfo, win.id)
+    this.WindowsBox.setWindowInfo(_windowInfo)
     this.closeWin(data, win)
   }
 
@@ -92,7 +92,7 @@ class Win {
    * 获取当前页面传递过来的参数
    */
   getParameter () {
-    return this.WindowsBox.getWindowInfo(this.win.id).sendMsg
+    return this.WindowsBox.getWindowInfoById(this.win.id).sendMsg
   }
 
   /*
@@ -117,7 +117,7 @@ class Win {
       this.Event.emit('_windowToMsg', arg)
     }
     let closeWinInfo = () => {
-      let _windowInfo = this.WindowsBox.getWindowInfo(this.win.id)
+      let _windowInfo = this.WindowsBox.getWindowInfoById(this.win.id)
       if (_windowInfo && _windowInfo.fromId) {
         // 先发送数据
         let data = {
@@ -137,7 +137,7 @@ class Win {
       // 什么情况下应该关闭应用--all中只剩空窗和当前窗口才关闭
       for (var i = allWindows.length - 1; i >= 0; i--) {
         let key = _windowList.indexOf(allWindows[i].id)
-        if (allWindows[i].id != this.win.id && (key < 0 || (key > -1 && this.WindowsBox.getWindowInfo(_windowList[key]).isUse))) appShouldQuit = false
+        if (allWindows[i].id != this.win.id && (key < 0 || (key > -1 && this.WindowsBox.getWindowInfoById(_windowList[key]).isUse))) appShouldQuit = false
       }
       if (appShouldQuit) remote.app.quit()
       // 删除主进程监听
@@ -204,7 +204,7 @@ class Win {
       data: data,
       winList: winList || []
     }
-    let _windowInfo = this.WindowsBox.getWindowInfo(this.win.id)
+    let _windowInfo = this.WindowsBox.getWindowInfoById(this.win.id)
     if (_windowInfo) {
       _data.fromWinName = _windowInfo.name
       _data.fromWinId = _windowInfo.id
@@ -238,7 +238,7 @@ class Win {
    * 获取窗口的名字
    */
   getThisWindowName () {
-    return this.WindowsBox.getWindowInfo(this.win.id).name
+    return this.WindowsBox.getWindowInfoById(this.win.id).name
   }
 
   /*
@@ -265,12 +265,13 @@ class Win {
 
   /*
    * 跳转路由
+   * @parame option {object} {win: win, name: '', data: {}, router: ''}
    */
-  routerPush (router, win) {
-    if (!win) {
-      win = this.win
+  routerPush (option) {
+    if (!option.win && !option.name) {
+      option.win = this.win
     }
-    this.WindowsBox.windowRouterChange(win, router)
+    this.WindowsBox.routerPush(option)
   }
 }
 
