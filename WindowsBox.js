@@ -333,7 +333,6 @@ class WindowsBox {
         opacity: opacity
       }
     }
-    console.log(option)
     let animateId
     TWEEN.removeAll()
     let tween = new TWEEN.Tween(option.from)
@@ -416,21 +415,6 @@ class WindowsBox {
   }
 
   /*
-   * 获取windowList对象
-   */
-  getWindowList () {
-    return this._windowList
-  }
-
-  isPackaged () {
-    const execFile = path.basename(process.execPath).toLowerCase()
-    if (process.platform === 'win32') {
-      return execFile !== 'electron.exe'
-    }
-    return execFile !== 'electron'
-  }
-
-  /*
    * 路由跳转
    * @parame option {object} {win: win, name: '', data: {}, router: ''}
    */
@@ -449,7 +433,7 @@ class WindowsBox {
     this.windowRouterChange(win, option.router)
     // 设置队列信息
     windowInfo.router = option.router
-    windowInfo.data = option.data
+    windowInfo.sendMsg = option.data
     this.setWindowInfo(windowInfo)
   }
 
@@ -476,6 +460,21 @@ class WindowsBox {
    */
   setWindowInfo (data) {
     this._windowList = this._windowList.map(row => row.id === data.id ? data : row)
+  }
+
+  /*
+   * 获取windowList对象
+   */
+  getWindowList () {
+    return this._windowList
+  }
+
+  isPackaged () {
+    const execFile = path.basename(process.execPath).toLowerCase()
+    if (process.platform === 'win32') {
+      return execFile !== 'electron.exe'
+    }
+    return execFile !== 'electron'
   }
 }
 
