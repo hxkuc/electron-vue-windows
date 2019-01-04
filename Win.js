@@ -84,6 +84,15 @@ class Win {
       throw new Error('复用窗口必须定义窗口name')
     }
     console.log(option)
+    // vibrancy改为选择性安装
+    if (option.windowConfig.vibrancy) {
+      try {
+        require('@hxkuc/electron-vibrancy')
+      } catch (e) {
+        console.warn('please npm install @hxkuc/electron-vibrancy if you want use vibrancy window')
+        throw new Error(e)
+      }
+    }
     // 暂时只能允许传递字符串
     return this.WindowsBox.getFreeWindow(JSON.stringify(option))
   }

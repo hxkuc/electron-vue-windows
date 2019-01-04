@@ -1,6 +1,7 @@
 ## 功能介绍
 
 主要针对electron-vue做的插件，必在electron-vue的基础上使用，针对electron-vue中打开新的无边框窗口缓慢、传参困难等问题做的优化，安装方式简单、使用简单, 点击[这里](https://github.com/hxkuc/electron-ui)可以查看简单的demo
+- 说明：由于C++原生插件安装起来有一定的难度，为了更好的支持用户从1.0.39开始，默认的窗口高斯模糊效果为选装功能，@hxkuc/electron-vibrancy插件不再自动安装，如果需要开启vibrancy属性请先安装@hxkuc/electron-vibrancy
 
 ## 安装步骤
 
@@ -15,7 +16,10 @@ import Vue from 'vue'
 import router from './router' // 此处router文件为你的路由配置文件
 import Win from 'electron-vue-windows'
 // 初始化插件，要传入实例化的路由
-Win.init(router)
+Win.init(router, {
+  freeWindowNum: 2, // 初始空闲窗口数量（选填：默认为1）
+  port: 9080 // 端口号（选填：默认9080）
+})
 Vue.prototype.$Win = Win
 ```
 ## 使用插件

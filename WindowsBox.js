@@ -5,7 +5,6 @@
  */
 const { app, BrowserWindow, webContents } = require('electron')
 const path = require('path')
-const electronVibrancy = require('@hxkuc/electron-vibrancy')
 const TWEEN = require('@tweenjs/tween.js')
 
 /*
@@ -336,12 +335,12 @@ class WindowsBox {
     let animateId
     TWEEN.removeAll()
     let tween = new TWEEN.Tween(option.from)
-      .to( option.to, option.time)
+      .to(option.to, option.time)
       .onUpdate(function (a) {
         option.win.setPosition(parseInt(a.x), parseInt(a.y))
         option.win.setOpacity(a.opacity)
       }).onComplete(function () {
-        clearInterval(animateId);
+        clearInterval(animateId)
       }).start()
     let graphs = option.graphs.split('.')
     tween.easing(TWEEN.Easing[graphs[0]][graphs[1]])
@@ -359,15 +358,21 @@ class WindowsBox {
     // 是否开启背景模糊
     if (config.vibrancy) {
       freeWindow.on('resize', () => {
-        electronVibrancy.AddView(freeWindow, {
-          Material: 0,
-          Width: config.width || 800,
-          Height: config.height || 600,
-          X: config.vibrancyOptions.padding || 5,
-          Y: config.vibrancyOptions.padding || 5,
-          borderRadius: config.vibrancyOptions.borderRadius || 5,
-          ResizeMask: 2
-        })
+        try {
+          const electronVibrancy = require('@hxkuc/electron-vibrancy')
+          electronVibrancy.AddView(freeWindow, {
+            Material: 0,
+            Width: config.width || 800,
+            Height: config.height || 600,
+            X: config.vibrancyOptions.padding || 5,
+            Y: config.vibrancyOptions.padding || 5,
+            borderRadius: config.vibrancyOptions.borderRadius || 5,
+            ResizeMask: 2
+          })
+        } catch (e) {
+          throw new Error(e)
+          // console.warn('please npm install @hxkuc/electron-vibrancy')
+        }
       })
     }
     // 重置窗口大小
