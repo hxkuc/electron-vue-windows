@@ -83,6 +83,10 @@ class Win {
     if (option.windowConfig.reuse && !option.windowConfig.name) {
       throw new Error('复用窗口必须定义窗口name')
     }
+    // 兼容parent属性
+    if (option.parent) {
+      option.parent = option.parent.id
+    }
     console.log(option)
     // vibrancy改为选择性安装
     if (option.windowConfig.vibrancy) {

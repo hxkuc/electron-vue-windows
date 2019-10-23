@@ -49,8 +49,12 @@ class WindowsBox {
   /*
    * 打开新的空白窗口等待加载
    */
-  creatFreeWindow () {
-    let win = new BrowserWindow(this.baseWindowConfig)
+  creatFreeWindow (option) {
+    const config = Object.assign({}, this.baseWindowConfig, option)
+    if (option && option.parent) {
+      config.parent = this.getWinById(option.parent)
+    }
+    let win = new BrowserWindow(config)
     // 设置传参
     this._windowList.push({
       id: win.id,
@@ -169,7 +173,7 @@ class WindowsBox {
           }
         }
       } else {
-        freeWindowInfo = this.getNewWindow()
+        freeWindowInfo = this.getNewWindow(option)
         freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
         // 路由跳转
         this.windowRouterChange(freeWindow, option.windowConfig.router)
@@ -190,7 +194,7 @@ class WindowsBox {
       }
     } else {
       // 拉出窗口
-      freeWindowInfo = this.getNewWindow()
+      freeWindowInfo = this.getNewWindow(option)
       freeWindow = BrowserWindow.fromId(freeWindowInfo.id)
       // 路由跳转
       this.windowRouterChange(freeWindow, option.windowConfig.router)
@@ -273,6 +277,10 @@ class WindowsBox {
         config.y = option.windowConfig.customAnimation.fromPosition.y
       }
     }
+    if (option.parent) {
+      config.parent = this.getWinById(option.parent)
+    }
+    option.modal = option.modal || false
     config.vibrancy = option.windowConfig.vibrancy || false
     config.vibrancyOptions = option.windowConfig.vibrancyOptions || {}
     config.width = option.width
@@ -409,14 +417,20 @@ class WindowsBox {
   /*
    * 取出一个空白窗口并且返回（仅仅取出对象）
    */
-  getNewWindow () {
-    // 没有使用的窗口并且不是复用的窗口
-    let winInfo = this._windowList.find(row => row.isUse === false && !row.reuse)
-    if (!winInfo) {
-      let win = this.creatFreeWindow()
+  getNewWindow (option) {
+    // 是否父子窗口
+    if (option.parent) {
+      let win = this.creatFreeWindow(option)
       return this.getWindowInfoById(win.id)
+    } else {
+      // 没有使用的窗口并且不是复用的窗口
+      let winInfo = this._windowList.find(row => row.isUse === false && !row.reuse)
+      if (!winInfo) {
+        let win = this.creatFreeWindow()
+        return this.getWindowInfoById(win.id)
+      }
+      return winInfo
     }
-    return winInfo
   }
 
   /*
