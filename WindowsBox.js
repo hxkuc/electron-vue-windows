@@ -31,7 +31,7 @@ class WindowsBox {
     this.router = '/__BACKGROUND__'
     this._windowList = [] // 窗口容器
     this.baseWindowConfig = {
-      webPreferences: { webSecurity: this.isPackaged() },
+      webPreferences: { webSecurity: this.isPackaged(), nodeIntegration: true },
       show: false,
       transparent: true,
       frame: false,
